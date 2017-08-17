@@ -23,6 +23,7 @@ type File struct {
 	WorkBook      *xlsxWorkbook
 	WorkBookRels  *xlsxWorkbookRels
 	XLSX          map[string]string
+	sheetRels     xlsxWorkbookRels
 }
 
 // OpenFile take the name of an XLSX file and returns a populated XLSX file

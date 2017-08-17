@@ -101,6 +101,40 @@ func (f *File) AddPicture(sheet, cell, picture, format string) error {
 // addSheetRelationships provides function to add
 // xl/worksheets/_rels/sheet%d.xml.rels by given sheet name, relationship type
 // and target.
+func (f *File) addFileRelationships(sheet, relType, target, targetMode string, begin bool, end bool) int {
+	var rels = "xl/worksheets/_rels/" + strings.ToLower(sheet) + ".xml.rels"
+	//var sheetRels xlsxWorkbookRels
+	var rID = 1
+	var ID bytes.Buffer
+	ID.WriteString("rId")
+	ID.WriteString(strconv.Itoa(rID))
+	_, ok := f.XLSX[rels]
+	if ok {
+		ID.Reset()
+		//xml.Unmarshal([]byte(f.readXML(rels)), &sheetRels)
+		rID = len(f.sheetRels.Relationships) + 1
+		ID.WriteString("rId")
+		ID.WriteString(strconv.Itoa(rID))
+	}
+	f.sheetRels.Relationships = append(f.sheetRels.Relationships, xlsxWorkbookRelation{
+		ID:         ID.String(),
+		Type:       relType,
+		Target:     target,
+		TargetMode: targetMode,
+	})
+	if begin == true || end == true {
+		output, _ := xml.Marshal(f.sheetRels)
+		f.saveFileList(rels, string(output))
+		if end == true {
+			f.sheetRels.Relationships = make([]xlsxWorkbookRelation, 0)
+		}
+	}
+	return rID
+}
+
+// addSheetRelationships provides function to add
+// xl/worksheets/_rels/sheet%d.xml.rels by given sheet name, relationship type
+// and target.
 func (f *File) addSheetRelationships(sheet, relType, target, targetMode string) int {
 	var rels = "xl/worksheets/_rels/" + strings.ToLower(sheet) + ".xml.rels"
 	var sheetRels xlsxWorkbookRels

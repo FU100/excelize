@@ -2317,6 +2317,45 @@ func (f *File) SetCellStyle(sheet, hcell, vcell string, styleID int) {
 	}
 }
 
+func (f *File) SetColCellStyle(sheet, hcell, vcell string, styleID int, colID int) {
+	hcell = strings.ToUpper(hcell)
+	vcell = strings.ToUpper(vcell)
+
+	// Coordinate conversion, convert C1:B3 to 2,0,1,2.
+	hcol := string(strings.Map(letterOnlyMapF, hcell))
+	hrow, _ := strconv.Atoi(strings.Map(intOnlyMapF, hcell))
+	hyAxis := hrow - 1
+	hxAxis := TitleToNumber(hcol)
+
+	vcol := string(strings.Map(letterOnlyMapF, vcell))
+	vrow, _ := strconv.Atoi(strings.Map(intOnlyMapF, vcell))
+	vyAxis := vrow - 1
+	vxAxis := TitleToNumber(vcol)
+
+	if vxAxis < hxAxis {
+		//hcell, vcell = vcell, hcell
+		vxAxis, hxAxis = hxAxis, vxAxis
+	}
+
+	if vyAxis < hyAxis {
+		//hcell, vcell = vcell, hcell
+		vyAxis, hyAxis = hyAxis, vyAxis
+	}
+
+	// Correct the coordinate area, such correct C1:B3 to B1:C3.
+	//hcell = ToAlphaString(hxAxis) + strconv.Itoa(hyAxis+1)
+	//vcell = ToAlphaString(vxAxis) + strconv.Itoa(vyAxis+1)
+
+	xlsx := f.workSheetReader(sheet)
+
+	completeRow(xlsx, vyAxis+1, vxAxis+1)
+	completeCol(xlsx, vyAxis+1, vxAxis+1)
+
+	for r, _ := range xlsx.SheetData.Row {
+		xlsx.SheetData.Row[r].C[colID].S = styleID
+	}
+}
+
 // SetConditionalFormat provides function to create conditional formatting rule
 // for cell value. Conditional formatting is a feature of Excel which allows you
 // to apply a format to a cell or a range of cells based on certain criteria.

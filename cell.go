@@ -219,6 +219,28 @@ func (f *File) SetCellFormula(sheet, axis, formula string) {
 //
 //    xlsx.SetCellHyperLink("Sheet1", "A3", "Sheet1!A40", "Location")
 //
+func (f *File) SetFileCellHyperLink(sheet, axis, link, linkType string, begin bool, end bool) {
+	xlsx := f.workSheetReader(sheet)
+	axis = f.mergeCellsParser(xlsx, axis)
+	linkTypes := map[string]xlsxHyperlink{
+		"External": {},
+		"Location": {Location: link},
+	}
+	hyperlink, ok := linkTypes[linkType]
+	if !ok || axis == "" {
+		return
+	}
+	hyperlink.Ref = axis
+	if linkType == "External" {
+		rID := f.addFileRelationships(sheet, SourceRelationshipHyperLink, link, linkType, begin, end)
+		hyperlink.RID = "rId" + strconv.Itoa(rID)
+	}
+	if xlsx.Hyperlinks == nil {
+		xlsx.Hyperlinks = &xlsxHyperlinks{}
+	}
+	xlsx.Hyperlinks.Hyperlink = append(xlsx.Hyperlinks.Hyperlink, hyperlink)
+}
+
 func (f *File) SetCellHyperLink(sheet, axis, link, linkType string) {
 	xlsx := f.workSheetReader(sheet)
 	axis = f.mergeCellsParser(xlsx, axis)
