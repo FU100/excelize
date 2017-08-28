@@ -79,3 +79,31 @@ func (f *File) Write(w io.Writer) error {
 
 	return nil
 }
+
+// Write provides function to write to an io.Writer.
+func (f *File) WriteToBuf() ([]byte, error) {
+	buf := new(bytes.Buffer)
+	zw := zip.NewWriter(buf)
+	f.contentTypesWriter()
+	f.workbookWriter()
+	f.workbookRelsWriter()
+	f.worksheetWriter()
+	f.styleSheetWriter()
+	for path, content := range f.XLSX {
+		fi, err := zw.Create(path)
+		if err != nil {
+			return nil, err
+		}
+		_, err = fi.Write([]byte(content))
+		if err != nil {
+			return nil, err
+		}
+	}
+	err := zw.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+
+}
